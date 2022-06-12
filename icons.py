@@ -1,2 +1,5 @@
 iconEyes="👀"
 iconCrossMark="❌"
+iconFire="🔥"
+iconRocket="🚀"
+iconMoneyBag="💰"

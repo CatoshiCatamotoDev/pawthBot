@@ -6,7 +6,9 @@ This could include:
  - Twitter status changes
  - ...
 
-This is a public repo. Feel free to add any functionality, comments, ...
+This is a public & open source repo. Feel free to add any functionality, comments, ...
+
+Inspiration for this repo comes from https://twitter.com/SafeMoonNewsBot. Make sure to give this cool bot a follow.
 
 ## How to use
 Make sure you have a recent version of Python on your machine. It could be that you have to install some packages to meet all dependencies.
@@ -46,10 +48,18 @@ Keep track of on-chain buys and report big buys.
 ### Twitter changes of the @Pawthereum account
 Keep track of updates of the official Pawthereum twitter account and report any changes.
 
+
+### Pawthereum History
+Mention historical events from a specific day.
+e.g. On this day 1y ago Pawthereum got launched.
+
+### Bot Icon
+Get the bot icon (automated account) on twitter
+
 ...
 
 
 ## Epilogue
-We init for the animals. Spread love and hug your furry fren every now and then.
+We init for the animals. Go and give your furry fren a hug and spread love.
 
 Catoshi

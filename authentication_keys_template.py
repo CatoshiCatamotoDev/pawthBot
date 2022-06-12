@@ -3,6 +3,8 @@
 
 ## Authentication keys & secrets
 
+#Etherscan Key:
+ETHERSCAN_API_KEY = ""
 #API Key:
 twitter_consumer_key=""
 

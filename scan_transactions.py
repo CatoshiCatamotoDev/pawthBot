@@ -1,16 +1,6 @@
-##
-# TAKEN FROM:
-# https://gist.github.com/miohtama/15391d1f31ee4ec7374a7490afaff740
-###
-
-"""A stateful event scanner for Ethereum-based blockchains using Web3.py.
-
-With the stateful mechanism, you can do one batch scan or incremental scans,
-where events are added wherever the scanner left off.
-"""
-
 import datetime
 import time
+from time import ctime
 import logging
 from abc import ABC, abstractmethod
 from typing import Tuple, Optional, Callable, List, Iterable
@@ -34,10 +24,57 @@ from web3._utils.events import get_event_data
 from web3.middleware import geth_poa_middleware
 logger = logging.getLogger(__name__)
 
+## TOPICS
+TOPIC_TRANSFER = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
+TOPIC_SWAP = '0xd78ad95fa46c994b6551d0da85fc275fe613ce37657fb8d5e3d130840159d822'
+
+#TODO - add liquidity:
+# e.g. RADIO: https://etherscan.io/tx/0xdb350299399f486a90ffbfdf5b6021f680c3283c950f0e8ab9d875e2d552d376
+# 
+
+with open('settings/pairs_radio_usdc.json', 'r', encoding='utf-8') as f:
+    contracts_eth = json.load(f)
+
+## SWAP CONTRACTS
+CONTRACT_ANYSWAP_BSC = '0xC90C592677a58E3Af3af0e36635be22B76D92D45'
+CONTRACT_SAFEMOON_BSC = '0x11b058493cc61691cae52b6512817c4f913260c2'
+CONTRACT_PANCAKE_BSC = '0x0babbb875c4eec2c3f3fc7936ec9632fdce1fac4'
+
+
+## TOKENS
+CONTRACT_TOKEN_PAWTH_ETH = '0xAEcc217a749c2405b5ebC9857a16d58Bdc1c367F'
+CONTRACT_TOKEN_USDT_ETH = '0xdAC17F958D2ee523a2206206994597C13D831ec7'
+
+CONTRACT_TOKEN_PAWTH_BSC = '0x409e215738E31d8aB252016369c2dd9c2008Fee0'
+CONTRACT_TOKEN_WBNB_BSC = '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c'
+
+## WALLETS
+CONTRACT_PAWTH_CHARITY_WALLET_ETH = '0xf4A22C530e8cC64770C4eDb5766D26F8926E20bd'
+
+ADDRESS_PAWTH_DEPLOYER_BSC = '0x06b0A2C6beeA3fd215D47324DD49E1ee3a4a9F25'
+##
+# TAKEN FROM:
+# https://gist.github.com/miohtama/15391d1f31ee4ec7374a7490afaff740
+###
+
+"""A stateful event scanner for Ethereum-based blockchains using Web3.py.
+
+With the stateful mechanism, you can do one batch scan or incremental scans,
+where events are added wherever the scanner left off.
+"""
 chain = 0
 API_URL_ETH = "https://mainnet.infura.io/v3/b4715cf51cb540d88f4b00de650cc931"
 # https://rpc.flashbots.net/"
-API_URL_BSC = "https://rpc-bsc.bnb48.club"
+# API_URL_BSC = "https://rpc-bsc.bnb48.club"
+# API_URL_BSC = "https://bsc-dataseed1.binance.org/"
+
+# API_URL_BSC = "https://binance.ankr.com"
+API_URL_BSC = "https://weathered-green-bush.bsc.discover.quiknode.pro/2aeccea57a4f551495a5297a18f60dc1a0d4d225/"
+
+
+
+
+
 
 
 class EventScannerState(ABC):
@@ -66,7 +103,7 @@ class EventScannerState(ABC):
         """
 
     @abstractmethod
-    def process_event(self, block_when: datetime.datetime, event: AttributeDict) -> object:
+    def process_event(self, block_when: datetime.datetime, event: AttributeDict, receipt) -> object:
         """Process incoming events.
 
         This function takes raw events from Web3, transforms them to your application internal
@@ -212,13 +249,16 @@ class EventScanner:
                 retries=self.max_request_retries,
                 delay=self.request_retry_seconds)
 
-            # print(">>>>>>>>> FETCH EVENTS DONE")
+            print(">>>>>>>>> FETCH EVENTS DONE")
 
             # print(end_block)
             # print(events)
+            print(len(events))
+
+            success = 0
             for evt in events:
                 idx = evt["logIndex"]  # Integer of the log index position in the block, null when its pending
-                # print(evt)
+                print(evt)
                 # We cannot avoid minor chain reorganisations, but
                 # at least we must avoid blocks that are not mined yet
                 assert idx is not None, "Somehow tried to scan a pending block"
@@ -228,15 +268,30 @@ class EventScanner:
                 # Get UTC time when this event happened (block mined timestamp)
                 # from our in-memory cache
                 block_when = get_block_when(block_number)
-
+                # print(evt)
                 logger.debug("Processing event %s, block:%d count:%d", evt["event"], evt["blockNumber"])
-                transfer, txhash, processed = self.state.process_event(block_when, evt)
+
+                txhash1 = evt.transactionHash.hex()
+                receipt = self.web3.eth.getTransactionReceipt(txhash1)
+
+                # print("\n>>>>>")
+                transfer, txhash, processed, success = self.state.process_event(block_when, evt, receipt)
+                
+                # print(processed)
+                if success == 1:
+                    print("SUCCESS!!")
+                    print(transfer)
+
                 # print(transfer)
-                transfer_investigate(transfer, txhash)
+                # transfer_investigate(transfer, txhash)
                 all_processed.append(processed)
+                ##!! USDT
+                # if transfer["type"] != "UNKNOWN":
+                #     print("KAKA")
+                #     break
 
         end_block_timestamp = get_block_when(end_block)
-        return end_block, end_block_timestamp, all_processed
+        return end_block, end_block_timestamp, all_processed, success
 
     def estimate_next_chunk_size(self, current_chuck_size: int, event_found_count: int):
         """Try to figure out optimal chunk size
@@ -295,7 +350,7 @@ class EventScanner:
 
         # All processed entries we got on this scan cycle
         all_processed = []
-
+        success = 0
         while current_block <= end_block:
 
             self.state.start_chunk(current_block, chunk_size)
@@ -309,8 +364,8 @@ class EventScanner:
             start = time.time()
                         # self._fetch_events(, 14978130)
 
-            actual_end_block, end_block_timestamp, new_entries = self.scan_chunk(current_block, estimated_end_block)
-
+            actual_end_block, end_block_timestamp, new_entries, success = self.scan_chunk(current_block, estimated_end_block)
+            print("Q: success = ?" + str(success))
             # Where does our current chunk scan ends - are we out of chain yet?
             current_end = actual_end_block
 
@@ -325,13 +380,18 @@ class EventScanner:
             chunk_size = self.estimate_next_chunk_size(chunk_size, len(new_entries))
 
             # Set where the next chunk starts
-            current_block = current_end + 1
+            ##!! USDT
+            if success == 1:
+                print("BIG SUCCESS")
+                current_block = current_end + 8640 #
+            else:
+                current_block = current_end  + 1 #+ 8640 #
+            # current_block = current_end + 1
             total_chunks_scanned += 1
             if current_end > end_block:
                 current_end = end_block
 
             self.state.end_chunk(current_end)
-
         return all_processed, total_chunks_scanned
 
 
@@ -419,7 +479,7 @@ def _fetch_events_for_all_contracts(
         toBlock=to_block
     )
 
-    logger.debug("Querying eth_getLogs with the following parameters: %s", event_filter_params)
+    # print("Querying eth_getLogs with the following parameters: %s", event_filter_params)
 
     # Call JSON-RPC API on your Ethereum node.
     # get_logs() returns raw AttributedDict entries
@@ -427,6 +487,7 @@ def _fetch_events_for_all_contracts(
     # print(logs)
     # Convert raw binary data to Python proxy objects as described by ABI
     all_events = []
+    # print(logs)
     for log in logs:
         # Convert raw JSON-RPC log result to human readable event by using ABI data
         # More information how processLog works here
@@ -450,33 +511,17 @@ from tqdm import tqdm
 
 # Contract Addresses
 TOKEN_ADDRESS_ETH = "0xAEcc217a749c2405b5ebC9857a16d58Bdc1c367F"
+
 TOKEN_ADDRESS_BSC = "0x409e215738E31d8aB252016369c2dd9c2008Fee0"
 
+TOKEN_ADDRESS_TETHER_ETH="0xdAC17F958D2ee523a2206206994597C13D831ec7"
+TOKEN_RADIO="0x7a5d3A9Dcd33cb8D527f7b5F96EB4Fef43d55636"
+TOKEN_ADDRESS_USDC="0x9379F5e035CF6148c6bbEE1D6415795cc773b0A4"
+# TOKEN_ADDRESS_TETHER_ETH="0x6C3e4cb2E96B01F4b866965A91ed4437839A121a"
+
 # Reduced ERC-20 ABI, only Transfer event
-ABI = """[
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": true,
-                "name": "from",
-                "type": "address"
-            },
-            {
-                "indexed": true,
-                "name": "to",
-                "type": "address"
-            },
-            {
-                "indexed": false,
-                "name": "value",
-                "type": "uint256"
-            }
-        ],
-        "name": "Transfer",
-        "type": "event"
-    }
-]
+ABI = json.load(open("settings/ABI.json", "rt"))
+ABI_LONG = """
 """
 
 class JSONifiedState(EventScannerState):
@@ -490,10 +535,12 @@ class JSONifiedState(EventScannerState):
         self.state = None
         if chain == 0:
             print("INIT CHAIN: ETH")
-            self.fname = "transactions-state-eth.json"
+            # self.fname = "transactions-state-pawth_eth3.json"
+            self.fname = "tx_radio_usdc-1.json"
+
         else:
             print("INIT CHAIN: BSC")
-            self.fname = "transactions-state-bsc.json"
+            self.fname = "transactions-state-bsc2.json"
         # How many second ago we saved the JSON file
         self.last_save = 0
 
@@ -514,6 +561,7 @@ class JSONifiedState(EventScannerState):
             self.reset()
 
     def save(self):
+        print("ACTUAL SAVE")
         """Save everything we have scanned so far in a file."""
         with open(self.fname, "wt") as f:
             json.dump(self.state, f)
@@ -540,14 +588,261 @@ class JSONifiedState(EventScannerState):
         """Save at the end of each block, so we can resume in the case of a crash or CTRL+C"""
         # Next time the scanner is started we will resume from this block
         self.state["last_scanned_block"] = block_number
-
+        self.state["last_scanned_time"] = time.time()
+        # print("TIME:")
+        # print(ctime(self.state["last_scanned_time"]))
         # Save the database file for every minute
         if time.time() - self.last_save > 3:
-            # print("\nSAVE!")
+            print("\nSAVE!")
             self.save()
 
-    def process_event(self, block_when: datetime.datetime, event: AttributeDict) -> str:
+    def process_event(self, block_when: datetime.datetime, event: AttributeDict, receipt) -> str:
         """Record a ERC-20 transfer in our database."""
+
+        secondaryValue = 0
+        primaryValue = 0
+        primaryName = ""
+        secondaryName = ""
+        valueCharity = 0
+        valueTo = ""
+        valueFrom = ""
+
+        dexName = ""
+        typeName = "UNKNOWN"
+        print("PROCESS")
+        # print(event.logIndex)
+        logs = receipt['logs']
+        for log in logs:
+            # print("LOG = ")
+            # print(log)
+            # print(len(log['topics']))
+            # print(log['topics'][0].hex())
+            if len(log['topics']) > 2:
+                topic0 = log['topics'][0].hex()
+                topic1 = log['topics'][1].hex()
+                topic2 = log['topics'][2].hex()
+
+                address = log['address']
+
+                topic1_int = int(topic1, 16)
+                topic2_int = int(topic2, 16)
+                data_str = log['data']
+                data_0x = data_str[0:1]
+                data_value = data_str[3:66]
+
+                # Note: split data_str into subvalues:
+                #     test1 = data_str[3:66]
+                #     test2 = data_str[67:130]
+                #     test3 = data_str[131:194]
+                #     test4 = data_str[195:258]
+
+                
+                # Is it a transfer?
+                if topic0 == TOPIC_TRANSFER:
+
+                    # Loop over all pairs
+                    for i in range(0, len(contracts_eth["pairs"])):
+
+                        #Print pair
+                        # print(contracts_eth["pairs"][i])
+
+                        ###########################
+                        #   PAIR PRIMARY ELEMENT  #
+                        ###########################
+                        if address == contracts_eth["pairs"][i]["primary"]["address"]:
+                            
+                            # Print primary name
+                            # print("PRIMARY = " + contracts_eth["primary"][i]["name"])
+
+                            ### Check if there is an interaction with a contract
+                            #Check if it's a BUY (primary token FROM contract)
+                            if topic1_int == int(contracts_eth["pairs"][i]["contract"]["address"], 16):
+                                primaryValue = int(data_value,16)
+                                primaryName = contracts_eth["pairs"][i]["primary"]["name"]
+                                print("!!!VALUE PRIMARY1 (BUY!?) = " + str(primaryValue))
+                                typeName = contracts_eth["pairs"][i]["contract"]["type2"]
+                                dexName = contracts_eth["pairs"][i]["contract"]["name"]
+                                valueTo = topic2
+                                break
+
+                            #Check if it's a SELL (primary token TO contract)
+                            elif topic2_int == int(contracts_eth["pairs"][i]["contract"]["address"], 16):
+                                primaryValue = int(data_value,16)
+                                primaryName = contracts_eth["pairs"][i]["primary"]["name"]
+
+                                print("!!!VALUE PRIMARY2 (SELL?!) = " + str(primaryValue))
+                                typeName = contracts_eth["pairs"][i]["contract"]["type1"]
+                                dexName = contracts_eth["pairs"][i]["contract"]["name"]
+                                valueFrom = topic1
+                                break
+
+                            # Check if there is something else going on like charity
+                            elif topic2_int == int(contracts_eth["pairs"][i]["contract"]["charity"], 16):
+                                valueCharity = int(data_value,16)
+                                print("VALUE CHARITY = " + str(valueCharity))   
+                                break
+
+                            ##TODO: what with going out of charity?!
+                            # -> elif topic1_int == int(contracts_eth["pairs"][i]["contract"]["charity"], 16):
+
+
+
+                        #############################
+                        #   PAIR SECONDARY ELEMENT  #
+                        #############################                        
+                        if address == contracts_eth["pairs"][i]["secondary"]["address"]:
+
+                            ### Check if there is an interaction with a contract
+                            #Check if it's a SELL (secondary token FROM contract)
+                            if topic1_int == int(contracts_eth["pairs"][i]["contract"]["address"], 16):
+                                secondaryValue = int(data_value,16)
+                                secondaryName = contracts_eth["pairs"][i]["secondary"]["name"]
+                                print("!!!VALUE SECONDARY (SELL!?) = " + str(secondaryValue))
+                                typeName = contracts_eth["pairs"][i]["contract"]["type1"]
+                                dexName = contracts_eth["pairs"][i]["contract"]["name"]
+                                valueTo = topic2
+                                break
+
+                            #Check if it's a BUY (primary token TO contract)                                                        
+                            elif topic2_int == int(contracts_eth["pairs"][i]["contract"]["address"], 16):
+                                secondaryValue = int(data_value,16)
+                                secondaryName = contracts_eth["pairs"][i]["secondary"]["name"]
+
+                                valueFrom = topic1
+                                typeName = contracts_eth["pairs"][i]["contract"]["type2"]
+                                dexName = contracts_eth["pairs"][i]["contract"]["name"]
+                                print("!!!VALUE SECONDARY (BUY?!) = " + str(secondaryValue))
+                                break
+
+
+                    ## We looped over all pairs. Check if values are filled in. If not we have an issue.
+                    # Check for primary value
+                    if primaryValue == 0 and secondaryValue == 0 and valueCharity == 0:
+                        primaryName = "ERROR"
+                        secondaryName = "ERROR"
+                        typeName = "ERROR"
+                        dexName = "ERROR"
+
+                        print(" >> ERR - primary value issue")
+
+            
+                # #TODO: integrate BSC part!!
+                # ###   BSC   ###
+                # if address == CONTRACT_TOKEN_PAWTH_BSC:
+                #     if topic0 == TOPIC_TRANSFER:
+                #         if topic1_int == int(CONTRACT_TOKEN_PAWTH_BSC, 16):
+                #             print("VALUE FROM CHARITY")
+
+                #         elif topic2_int == int(CONTRACT_TOKEN_PAWTH_BSC, 16):
+                #             print("PAWTH CHARITY TO!!")
+                #             valueCharity = int(data_value,16)
+                #             print("VALUE CHARITY = " + str(valueCharity))
+
+                #         # ANYSWAP
+                #         elif topic1_int == int(CONTRACT_ANYSWAP_BSC, 16):
+                #             print("PAWTH FROM ANYSWAP!!")
+                #             primaryValue = int(data_value,16)
+
+                #         elif topic2_int == int(CONTRACT_ANYSWAP_BSC, 16):
+                #             print("ERROR - should not come here - PAWTH TO GRUMPYSWAP!!")
+                #             primaryValue = int(data_value,16)
+                #             print("VALUE PAWTH = " + str(primaryValue))
+
+                #         # SafeMoon
+                #         elif topic1_int == int(CONTRACT_SAFEMOON_BSC, 16):
+                #             print("PAWTH FROM SAFEMOON!!")
+                #             primaryValue = int(data_value,16)
+
+                #         elif topic2_int == int(CONTRACT_SAFEMOON_BSC, 16):
+                #             print("PAWTH TO SAFEMOON!!")
+                #             primaryValue = int(data_value,16)
+                #             print("VALUE PAWTH = " + str(primaryValue))
+
+                #         # PancakeSwap
+                #         elif topic1_int == int(CONTRACT_PANCAKE_BSC, 16):
+                #             print("PAWTH FROM PANCAKESWAP!!")
+                #             primaryValue = int(data_value,16)
+
+                #         elif topic2_int == int(CONTRACT_PANCAKE_BSC, 16):
+                #             print("PAWTH TO PANCAKESWAP!!")
+                #             primaryValue = int(data_value,16)
+                #             print("VALUE PAWTH = " + str(primaryValue))
+
+                #         else:
+                #             print("Transfer!?")
+                #             primaryValue = int(data_value,16)
+                #             print("VALUE PAWTH = " + str(primaryValue))
+                #             dexName = "Transfer"
+                #             typeName = "TRANSFER"
+
+            
+
+
+                # if typeName != "UNKNOWN":
+                #     print("GOING TO BREAK!!")
+                #     break
+
+
+                # Interactions with Anyswap Contract BSC
+                if address == CONTRACT_ANYSWAP_BSC:
+                    if topic0 == TOPIC_TRANSFER:
+                        print("ANYSWAP TRANSFER!!")
+                        dexName = "AnySwap"
+                        typeName = "SWAP"
+                        
+                        if topic1_int == int('0x0000000000000000000000000000000000000000', 16):
+                            secondaryValue = int(data_value,16)
+                            print("FROM ANYSWAP")
+                            # typeName = "SELL"
+                            print(secondaryValue)
+
+                        if topic2_int == int('0x0000000000000000000000000000000000000000', 16):
+                            print("TO ANYSWAP")
+                            # typeName = "SWAP"
+                            secondaryValue = int(data_value,16)
+                            print(secondaryValue)
+                #########
+                #   BSC
+                #########
+                # ON BSC, CHECK WBNB CONTRACT INTERACTIONS
+                if address == CONTRACT_TOKEN_WBNB_BSC:
+                    if topic0 == TOPIC_TRANSFER:
+                        print("SAFEMOON TRANSFER!!")
+                        typeName = "SWAP"
+                        
+                        # Interactions with Safemoon Contract BSC
+                        if topic1_int == int(CONTRACT_SAFEMOON_BSC, 16):
+                            secondaryValue = int(data_value,16)
+                            print("FROM Safemoon")
+                            dexName = "Safemoon"
+                            typeName = "SELL"
+                            print(secondaryValue)
+
+                        if topic2_int == int(CONTRACT_SAFEMOON_BSC, 16):
+                            print("TO Safemoon")
+                            dexName = "Safemoon"
+                            typeName = "BUY"
+                            secondaryValue = int(data_value,16)
+                            print(secondaryValue)
+
+
+                        # Interactions with Pancakeswap Contract BSC
+                        if topic1_int == int(CONTRACT_PANCAKE_BSC, 16):
+                            secondaryValue = int(data_value,16)
+                            print("FROM PANCAKESWAP")
+                            dexName = "PancakeSwap"
+                            typeName = "SELL"
+                            print(secondaryValue)
+
+                        if topic2_int == int(CONTRACT_PANCAKE_BSC, 16):
+                            print("TO PANCAKESWAP")
+                            dexName = "PancakeSwap"
+                            typeName = "BUY"
+                            secondaryValue = int(data_value,16)
+                            print(secondaryValue)
+
+         
+
         # Events are keyed by their transaction hash and log index
         # One transaction may contain multiple events
         # and each one of those gets their own log index
@@ -561,28 +856,48 @@ class JSONifiedState(EventScannerState):
         # Convert ERC-20 Transfer event to our internal format
         args = event["args"]
         transfer = {
-            "from": args["from"],
-            "to": args.to,
-            "value": args.value,
+            "from": valueFrom, #args["from"],
+            "to": valueTo, #args["to"],
+            "primaryName": primaryName,
+            "primaryValue": primaryValue,
+            "secondaryName": secondaryName,
+            "secondaryValue": secondaryValue,
+            "valueCharity": valueCharity,
+            "dex": dexName,
+            "type":  typeName,
             "timestamp": block_when.isoformat(),
         }
 
-        # Create empty dict as the block that contains all transactions by txhash
-        if block_number not in self.state["blocks"]:
-            self.state["blocks"][block_number] = {}
+        # print(txhash)
+        success = 0
 
-        block = self.state["blocks"][block_number]
-        if txhash not in block:
-            # We have not yet recorded any transfers in this transaction
-            # (One transaction may contain multiple events if executed by a smart contract).
-            # Create a tx entry that contains all events by a log index
-            self.state["blocks"][block_number][txhash] = {}
 
-        # Record ERC-20 transfer in our database
-        self.state["blocks"][block_number][txhash][log_index] = transfer
+            ## USDT!! Filter unknowns & errors
+        if typeName != "UNKNOWN" and typeName != "ERROR":
 
-        # Return a pointer that allows us to look up this event later if needed
-        return transfer, txhash, f"{block_number}-{txhash}-{log_index}"
+            # Create empty dict as the block that contains all transactions by txhash
+            if block_number not in self.state["blocks"]:
+                self.state["blocks"][block_number] = {}
+
+            block = self.state["blocks"][block_number]
+            if txhash not in block:
+                # We have not yet recorded any transfers in this transaction
+                # (One transaction may contain multiple events if executed by a smart contract).
+                # Create a tx entry that contains all events by a log index
+                self.state["blocks"][block_number][txhash] = {}
+
+            if transfer["from"] != '0xf4A22C530e8cC64770C4eDb5766D26F8926E20bd' and transfer["to"] != '0xf4A22C530e8cC64770C4eDb5766D26F8926E20bd':
+                # Record ERC-20 transfer in our database
+                self.state["blocks"][block_number][txhash] = transfer
+                print(transfer)
+                success = 1
+            # print("H2")
+            # Return a pointer that allows us to look up this event later if needed
+        
+        else:
+            print("ISSUE!!!!")
+
+        return transfer, txhash, f"{block_number}-{txhash}-{log_index}", success
 
 class bcolors:
     COLOR_BLUE = '\033[94m'
@@ -601,7 +916,7 @@ def scan_run_eth():
     print("#            SCANNING ETH                #")
     print("##########################################")
     print(bcolors.ENDC)
-    run_real(0, API_URL_ETH, TOKEN_ADDRESS_ETH)
+    run_real(0, API_URL_ETH, TOKEN_RADIO, 10000)
 
 def scan_run_bsc():
     print(bcolors.COLOR_YELLOW)
@@ -609,7 +924,7 @@ def scan_run_bsc():
     print("#            SCANNING BSC                #")
     print("##########################################")
     print(bcolors.ENDC)
-    run_real(1, API_URL_BSC, TOKEN_ADDRESS_BSC)
+    run_real(1, API_URL_BSC, TOKEN_ADDRESS_BSC, 3000)
 
 
 def run():
@@ -624,7 +939,7 @@ def run():
     if len(sys.argv) < 3:
         if chain == 0:
             api_url = API_URL_ETH
-            token_address = TOKEN_ADDRESS_ETH
+            token_address = TOKEN_ADDRESS_USDC
         else:
             api_url = API_URL_BSC
             token_address = TOKEN_ADDRESS_BSC
@@ -633,7 +948,7 @@ def run():
 
     run_real(chain_test, api_url, token_address)
 
-def run_real(chain_test, api_url, token_address):
+def run_real(chain_test, api_url, token_address, max_chunk_size):
     global chain 
     chain = chain_test
 
@@ -651,9 +966,13 @@ def run_real(chain_test, api_url, token_address):
     web3.middleware_onion.inject(geth_poa_middleware, layer=0)
 
     # Prepare stub ERC-20 contract object
-    abi = json.loads(ABI)
-    ERC20 = web3.eth.contract(abi=abi)
+    with open('settings/ABI.json', 'r', encoding='utf-8') as f:
+        abi = json.load(f)
 
+    print(abi)
+    # abi = json.loads(open("settings/ABI.json", "rt"))
+    ERC20 = web3.eth.contract(abi=abi)
+    
     # Restore/create our persistent state
     state = JSONifiedState()
     state.restore()
@@ -667,7 +986,7 @@ def run_real(chain_test, api_url, token_address):
         filters={"address": token_address},
         # How many maximum blocks at the time we request from JSON-RPC
         # and we are unlikely to exceed the response size limit of the JSON-RPC server
-        max_chunk_scan_size=3000
+        max_chunk_scan_size=max_chunk_size
     )
 
     # Assume we might have scanned the blocks all the way to the last Ethereum block
@@ -690,7 +1009,6 @@ def run_real(chain_test, api_url, token_address):
     ###################################
     print(" > Going to scan:")
     # print("CHAIN:" + str(chain))
-    print(" >>> RPC URL:" + api_url)
     print(" >>> Token Address:" + token_address)
     # print(" >>> Start block: " + str(state.get_last_scanned_block()))
 
@@ -716,3 +1034,43 @@ def run_real(chain_test, api_url, token_address):
     state.save()
     duration = time.time() - start
     print(f"Scanned total {len(result)} Transfer events, in {duration} seconds, total {total_chunks_scanned} chunk scans performed")
+
+
+def getBalance(chain_test, api_url, id, ch):
+    global chain 
+    chain = chain_test
+    print(">>>>>")
+    # Enable logs to the stdout.
+    # DEBUG is very verbose level
+    # logging.basicConfig(level=logging.INFO)
+    provider = HTTPProvider(api_url)
+
+    # Remove the default JSON-RPC retry middleware
+    # as it correctly cannot handle eth_getLogs block range
+    # throttle down.
+    provider.middlewares.clear()
+    web3 = Web3(provider)
+    web3.middleware_onion.inject(geth_poa_middleware, layer=0)
+
+    # Prepare stub ERC-20 contract object
+    # abi = json.loads(ABI_LONG)
+    with open('settings/ABI_LONG.json', 'r', encoding='utf-8') as f:
+        abi = json.load(f)
+
+
+    if ch == 0:
+        ERC20 = web3.eth.contract(TOKEN_ADDRESS_ETH, abi=abi)
+    else:
+        ERC20 = web3.eth.contract(TOKEN_ADDRESS_BSC, abi=abi)
+
+    # print(ERC20.address)
+
+    # print(ERC20.functions.name().call())
+    # alice = '0x06b0A2C6beeA3fd215D47324DD49E1ee3a4a9F25'
+    bob = '0x9Dc13931B51f974D8d7D85Af272B4c80E4B0E809'
+    if(int(id, 0) != 0):
+        print(id)
+        raw_balance = ERC20.functions.balanceOf(id).call()
+        print("BAL" + str(raw_balance))
+        return raw_balance
+    

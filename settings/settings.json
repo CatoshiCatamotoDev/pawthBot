@@ -1,0 +1,152 @@
+{
+    "name":"Pawthereum",
+    "supply":100,
+    "contract_eth":"0x1234",
+    "contract_bsc":"0x1234",
+    "contracts":
+     [
+        {
+        "name":"GRUMPYSWAP",
+        "address":"0x405715ab97d667BE039396adbC99B440d327FEbb",
+        "icon": "😾",
+        "chain":"ETH",
+        "ignore": 0,
+        "link_prefix": "https://etherscan.com/tx/",
+        "paired_with":"ETH",
+        "buys": 0,
+        "sells": 0
+        },
+        {
+        "name":"UNISWAP",
+        "address":"0x800A45f2b861229d59E952aeF57B22e84Ff949A1",
+        "icon": "🦄",
+        "chain":"ETH",
+        "ignore": 0,
+        "link_prefix": "https://etherscan.com/tx/",
+        "paired_with":"ETH",
+        "buys": 0,
+        "sells": 0
+        },
+        {
+        "name":"SHIBASWAP",
+        "address":"0xC57dC778A0d2d150d04fC0FD09a0113Ebe9d600c",
+        "icon": "🐕",
+        "chain":"ETH",
+        "ignore": 0,
+        "link_prefix": "https://etherscan.com/tx/",
+        "paired_with":"ETH",
+        "buys": 0,
+        "sells": 0
+        },
+        {
+        "name":"RADIOSWAP",
+        "address":"0x54a0baF656FCDc383A7c129751742FeCd4eEe726",
+        "icon": "📻",
+        "chain":"ETH",
+        "ignore": 0,
+        "link_prefix": "https://etherscan.com/tx/",
+        "paired_with":"ETH",
+        "buys": 0,
+        "sells": 0
+        },
+        {
+        "name":"BigONE",
+        "address":"0xD4Dcd2459BB78d7a645Aa7E196857D421b10D93F",
+        "icon": "1️⃣",
+        "chain":"ETH",
+        "ignore": 1,
+        "link_prefix": "https://etherscan.com/tx/",
+        "paired_with":"ETH",
+        "buys": 0,
+        "sells": 0
+        },
+        {
+        "name":"BSC Bridge",
+        "address":"0xDfed31E640b7280F76f046a97179E5E369D209b5",
+        "icon": "🌉",
+        "chain":"ETH",
+        "ignore": 1,
+        "link_prefix": "https://etherscan.com/tx/",
+        "paired_with":"ETH",
+        "buys": 0,
+        "sells": 0
+        },
+        {
+        "name":"Charity Wallet ETH",
+        "address":"0xf4A22C530e8cC64770C4eDb5766D26F8926E20bd",
+        "icon": "💙",
+        "chain":"ETH",
+        "ignore": 1,
+        "link_prefix": "https://etherscan.com/tx/",
+        "paired_with":"ETH",
+        "buys": 0,
+        "sells": 0
+        },
+        {
+        "name":"DEV Wallet",
+        "address":"0x16b1db77b60c8d8b6ecea0fa4e0481e9f53c9ba1",
+        "icon": "🔨",
+        "chain":"ETH",
+        "ignore": 1,
+        "link_prefix": "https://etherscan.com/tx/",
+        "paired_with":"ETH",
+        "buys": 0,
+        "sells": 0
+        },
+        {
+        "name":"PancakeSwap",
+        "address":"0x0bAbbB875C4eeC2c3F3Fc7936Ec9632fdCE1fAC4",
+        "icon": "🥞",
+        "chain":"BSC",
+        "ignore": 0,
+        "link_prefix": "https://bscscan.com/tx/",
+        "paired_with":"BNB",
+        "buys": 0,
+        "sells": 0
+        },
+        {
+        "name":"Safemoon Swap",
+        "address":"0x11b058493cc61691Cae52B6512817c4F913260c2",
+        "icon": "🚀",
+        "chain":"BSC",
+        "ignore": 0,
+        "link_prefix": "https://bscscan.com/tx/",
+        "paired_with":"BNB",
+        "buys": 0,
+        "sells": 0
+        },
+        {
+        "name":"Charity Wallet BSC",
+        "address":"0x409e215738E31d8aB252016369c2dd9c2008Fee0",
+        "icon": "💛",
+        "chain":"BSC",
+        "ignore": 1,
+        "link_prefix": "https://bscscan.com/tx/",
+        "paired_with":"BNB",
+        "buys": 0,
+        "sells": 0
+        },
+        {
+        "name":"Burn Wallet",
+        "address":"0x000000000000000000000000000000000000dead",
+        "icon": "🔥",
+        "chain":"ETH",
+        "ignore": 1,
+        "link_prefix": "https://etherscan.com/tx/",
+        "paired_with":"ETH",
+        "buys": 0,
+        "sells": 0
+        },
+        {
+         "name":"UNISWAP_TETH",
+         "address":"0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852",
+         "icon": "📻",
+         "chain":"ETH",
+         "ignore": 0,
+         "link_prefix": "https://etherscan.com/tx/",
+         "paired_with":"ETH",
+         "buys": 0,
+         "sells": 0
+         }
+     ]
+}

@@ -1,0 +1,85 @@
+{
+    "pairs":         
+    [
+        {
+            "primary": {
+                "name": "GRUMPY",
+                "address": "0x93B2FfF814FCaEFFB01406e80B4Ecd89Ca6A021b",                        
+                "decimals": 9    
+            },
+            "secondary": {
+                "name": "PAWTH",
+                "address": "0xAEcc217a749c2405b5ebC9857a16d58Bdc1c367F",
+                "decimals": 9
+
+            },
+            "contract":{
+                "name": "GRUMPYSWAP",
+                "address": "0x405715ab97d667be039396adbc99b440d327febb",   
+                "type1": "SWAP", 
+                "type2": "UNKNOWN", 
+                "charity": "0xf4A22C530e8cC64770C4eDb5766D26F8926E20bd"    
+            }
+        },
+        {
+            "primary": {
+                "name": "PAWTH",
+                "address": "0xAEcc217a749c2405b5ebC9857a16d58Bdc1c367F",
+                "decimals": 9    
+            },
+            "secondary": {
+                "name": "WETH",
+                "address": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+                "decimals": 18
+
+            },
+            "contract":{
+                "name": "UNISWAP",
+                "address": "0x800a45f2b861229d59e952aef57b22e84ff949a1",
+                "type1": "SELL", 
+                "type2": "BUY", 
+                "charity": "0xf4A22C530e8cC64770C4eDb5766D26F8926E20bd"    
+            }
+        },
+
+        {
+            "primary": {
+                "name": "PAWTH",
+                "address": "0xAEcc217a749c2405b5ebC9857a16d58Bdc1c367F",
+                "decimals": 9       
+            },
+            "secondary": {
+                    "name": "SHIB",
+                    "address": "0x95aD61b0a150d79219dCF64E1E6Cc01f0B64C4cE",
+                    "decimals": 18                       
+            },
+            "contract":{
+                "name": "SHIBASWAP",
+                "address": "0xC57dC778A0d2d150d04fC0FD09a0113Ebe9d600c",
+                "type1": "SELL", 
+                "type2": "BUY", 
+                "charity": "0xf4A22C530e8cC64770C4eDb5766D26F8926E20bd"    
+            }
+        },
+
+        {
+            "primary": {
+                "name": "PAWTH",
+                "address": "0xAEcc217a749c2405b5ebC9857a16d58Bdc1c367F",
+                "decimals": 9       
+            },
+            "secondary": {
+                "name": "RADIO",
+                "address": "0x7a5d3A9Dcd33cb8D527f7b5F96EB4Fef43d55636",
+                "decimals": 18                       
+            },
+            "contract":{
+                "name": "RADIOSWAP",
+                "address": "0x54a0baF656FCDc383A7c129751742FeCd4eEe726",
+                "type1": "SELL", 
+                "type2": "BUY", 
+                "charity": "0xf4A22C530e8cC64770C4eDb5766D26F8926E20bd"    
+            }
+        }
+    ]
+}

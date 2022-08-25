@@ -1,14 +1,46 @@
-# PawthereumTweetBot
-The goal of this repo is to create an engaging twitterbot that tweets about all things Pawthereum.
-This could include:
- - $PAWTH prices
- - Holder statistics
- - Twitter status changes
- - ...
+# PawthereumStatBots
+The goal of this repo is to create a framework from which engaging bots can be made (twitter, telegram, ...).
+The bots can then use the generated data to tweet interesting statistics about Pawthereum, post regular updates in Telegram channels or respond to requests...
+The goal is to gather as many interesting statistics as possible that can then be distributed.
 
 This is a public & open source repo. Feel free to add any functionality, comments, ...
 
 Inspiration for this repo comes from https://twitter.com/SafeMoonNewsBot. Make sure to give this cool bot a follow.
+
+## Statistics
+Some statistics that are calculated:
+ - Historical $PAWTH prices
+
+### Holder Statistics
+ - How many holders are there?
+ - How is the token distribution?
+ - What actions do the whales make?
+
+ #### Thresholds
+ - Threshold values (how much $PAWTH do I need to enter the top x?)
+ e.g.:
+```
+(Top 10 - )
+See here:
+Pawthereum whale dominance 🐳 
+Total circulating supply:
+123,000,000 $PAWTH
+
+Top 10: 123.456 M (1%)
+Top 100: 123.456 M (9%)
+Top 1000: 123.456 M (90%)
+```
+
+### Social Media
+#### Twitter
+ - Keep track of updates of the official Pawthereum twitter account (@Pawthereum) and report any changes.
+ - ...
+
+#### Telegram
+ - ...
+
+### Buys/Sells
+ - Keep track of on-chain buys and report big buys.
 
 ## How to use
 Make sure you have a recent version of Python on your machine. It could be that you have to install some packages to meet all dependencies.
@@ -25,41 +57,19 @@ A few notes:
 
 ## TODO
 This bot is brand new and there are many TODOs. Here's a non-exhaustive list
-
+Besides statistics some other features could be made..
 ## Functionality
-### Threshold values
-(Top 10 - )
-See here:
-Pawthereum whale dominance 🐳 
-Total circulating supply:
-123,000,000 $PAWTH
-
-Top 10: 123.456 M (1%)
-Top 100: 123.456 M (9%)
-Top 1000: 123.456 M (90%)
-
 ### Daily quote
 Post a cheerful daily (cat) quote.
 Need to make a database for that.
 
-### Mention big buys
-Keep track of on-chain buys and report big buys.
-
-### Twitter changes of the @Pawthereum account
-Keep track of updates of the official Pawthereum twitter account and report any changes.
-
-
 ### Pawthereum History
 Mention historical events from a specific day.
 e.g. On this day 1y ago Pawthereum got launched.
-
-### Bot Icon
-Get the bot icon (automated account) on twitter
-
 ...
 
 
 ## Epilogue
-We init for the animals. Go and give your furry fren a hug and spread love.
+We init for the animals. Go and give your furry fren a hug and spread love <3.
 
 Catoshi

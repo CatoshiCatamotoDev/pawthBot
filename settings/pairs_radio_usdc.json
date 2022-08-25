@@ -1,0 +1,25 @@
+{
+    "pairs":         
+    [
+        {
+            "primary": {
+                "name": "RADIO",
+                "address": "0x7a5d3A9Dcd33cb8D527f7b5F96EB4Fef43d55636",                      
+                "decimals": 18    
+            },
+            "secondary": {
+                "name": "USDC",
+                "address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+                "decimals": 6
+
+            },
+            "contract":{
+                "name": "RADIOSWAP",
+                "address": "0xc19C5B63705807079DbF6d54071F9113233283F5",   
+                "type1": "SELL", 
+                "type2": "BUY", 
+                "charity": "0x0"    
+            }
+        }
+    ]
+}

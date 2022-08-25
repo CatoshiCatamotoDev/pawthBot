@@ -1,0 +1,25 @@
+{
+    "pairs":         
+    [
+        {
+            "primary": {
+                "name": "USDT",
+                "address": "0xdAC17F958D2ee523a2206206994597C13D831ec7",                      
+                "decimals": 6    
+            },
+            "secondary": {
+                "name": "WETH",
+                "address": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+                "decimals": 18
+
+            },
+            "contract":{
+                "name": "UNISWAP",
+                "address": "0x0d4a11d5EEaaC28EC3F61d100daF4d40471f1852",   
+                "type1": "SELL", 
+                "type2": "BUY", 
+                "charity": "0xf4A22C530e8cC64770C4eDb5766D26F8926E20bd"    
+            }
+        }
+    ]
+}
